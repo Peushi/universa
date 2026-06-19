@@ -14,11 +14,13 @@ export async function chat({ message, history, model, world }) {
     : "llama-3.1-8b-instant"
   //build prompt
   const systemPrompt = buildSystemPrompt(world)
+  const trimmedHistory = Array.isArray(history) ? history.slice(-20) : []
   // call groq
     const response = await groq.chat.completions.create({
         model: selectedModel,
         messages: [
             { role: "system", content: systemPrompt },
+            ...trimmedHistory,
             { role: "user", content: message.trim() },
         ],
         temperature: 0.85,
