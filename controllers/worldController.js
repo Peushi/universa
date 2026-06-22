@@ -20,3 +20,10 @@ export async function createWorld(req, res) {
     }
 }
 
+export async function getWorld(req, res){
+    const world = worlds.get(req.session.userId);
+    if(!world){
+        return res.status(404).json({error: "No world found. Please create one first."})
+    }
+    res.json({world})
+}
