@@ -2,7 +2,7 @@ import { chat } from "../services/groqService.js"
 import { worlds } from "../data/store.js"
    
 export async function sendMessage(req, res) {
-    const { message, history = [], model } = req.body
+    const { message, history = [] } = req.body
     if (!message || message.trim().length === 0) {
         return res.status(400).json({ error: "Message cannot be empty" })
     }
@@ -18,6 +18,6 @@ export async function sendMessage(req, res) {
     if (!world) {
         return res.status(404).json({ error: 'No world found. Please generate a world first before stating a conversation' })
     }
-    const reply = await chat({ message, history, model, world });
-    res.json({ reply, modelUsed: reply.modelUsed });
+    const reply = await chat({ message, history, world });
+    res.json({ reply: reply.reply });
 }

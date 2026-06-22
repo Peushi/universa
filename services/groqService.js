@@ -7,17 +7,15 @@ const ALLOWED_MODELS = [
   "mixtral-8x7b-32768",
 ]
 
-export async function chat({ message, history, model, world }) {
-  //model validation
-  const selectedModel = ALLOWED_MODELS.includes(model)
-    ? model
-    : "llama-3.1-8b-instant"
+const DEFAULT_MODEL = "llama-3.1-8b-instant"
+
+export async function chat({ message, history, world }) {
   //build prompt
   const systemPrompt = buildSystemPrompt(world)
   const trimmedHistory = Array.isArray(history) ? history.slice(-20) : []
   // call groq
     const response = await groq.chat.completions.create({
-        model: selectedModel,
+        model: DEFAULT_MODEL,
         messages: [
             { role: "system", content: systemPrompt },
             ...trimmedHistory,
@@ -28,7 +26,7 @@ export async function chat({ message, history, model, world }) {
     });
     return {
         reply: response.choices[0].message.content,
-        modelUsed: selectedModel
+        modelUsed: DEFAULT_MODEL
     };
 }
 
