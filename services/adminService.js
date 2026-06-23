@@ -1,17 +1,14 @@
-import { users, worlds } from "../data/store.js";
+import db from "../data/db.js";
 
 export function getAllUsers() {
-    return [...users.values()].map(u => ({
-        id: u.id,
-        username: u.username,
-        role: u.role,
-    }));
+    return db.prepare("SELECT id, username, role FROM users").all()
 }
 
 export function getAllWorlds() {
-    return [...worlds.entries()].map(([userId, world]) => ({
-        userId, world,
-    }));
+    return db
+      .prepare("SELECT user_id, data FROM worlds")
+      .all()
+      .map((r) => ({ userId: r.user_id, world: JSON.parse(r.data) }))
 }
 
 export function getSessionInfo(session) {

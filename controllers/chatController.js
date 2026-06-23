@@ -1,5 +1,5 @@
 import { chat } from "../services/groqService.js"
-import { worlds } from "../data/store.js"
+import db from "../data/db.js"
    
 export async function sendMessage(req, res) {
     const { message, history = [] } = req.body
@@ -14,7 +14,9 @@ export async function sendMessage(req, res) {
     if (!Array.isArray(history)) {
         return res.status(400).json({ error: "History must be an array." })
     }
-    const world = worlds.get(req.session.userId);
+    const row = db.prepare("SELECT data FROM worlds WHERE user_id = ?").get(req.session.userId)
+    const world = row ? JSON.parse(row.data) : null
+    
     if (!world) {
         return res.status(404).json({ error: 'No world found. Please generate a world first before stating a conversation' })
     }
