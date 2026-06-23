@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNIVERSA — Atlas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="atlas-page">
+
+  <div class="stars-bg"></div>
+
+  <nav class="topnav">
+    <a href="index.html" class="nav-logo">✦ UNIVERSA</a>
+    <div class="nav-links">
+      <span class="nav-user" id="nav-username"></span>
+      <a href="explorer.html" class="nav-link">Explorer</a>
+      <a href="index.html" class="nav-link">New World</a>
+      <button class="nav-btn-logout" id="logout-btn">Leave</button>
+    </div>
+  </nav>
+
+  <div class="atlas-loading" id="atlas-loading">
+    <div class="loading-orb"></div>
+    <p>Opening the Atlas…</p>
+  </div>
+
+  <main class="atlas-main hidden" id="atlas-content">
+
+    <header class="atlas-hero">
+      <p class="section-eyebrow">World Atlas</p>
+      <h1 class="atlas-world-name" id="atlas-world-name">—</h1>
+      <p class="atlas-premise" id="atlas-premise"></p>
+      <div class="atlas-meta">
+        <span class="atlas-meta-item">Generated World</span>
+      </div>
+    </header>
+
+    <div class="atmosphere-banner">
+      <p class="atmosphere-label">Tone</p>
+      <p class="atmosphere-text" id="atlas-atmosphere"></p>
+    </div>
+
+    <div class="atlas-grid">
+
+      <div class="atlas-card" id="card-geography">
+        <div class="atlas-card-icon">🗺</div>
+        <h2 class="atlas-card-title">Geography</h2>
+        <p class="atlas-card-body" id="atlas-geography"></p>
+      </div>
+
+      <div class="atlas-card" id="card-history">
+        <div class="atlas-card-icon">📜</div>
+        <h2 class="atlas-card-title">History</h2>
+        <p class="atlas-card-body" id="atlas-history"></p>
+      </div>
+
+      <div class="atlas-card" id="card-cultures">
+        <div class="atlas-card-icon">👁</div>
+        <h2 class="atlas-card-title">Culture</h2>
+        <p class="atlas-card-body" id="atlas-cultures"></p>
+      </div>
+
+      <div class="atlas-card" id="card-rules">
+        <div class="atlas-card-icon">✦</div>
+        <h2 class="atlas-card-title">Rules</h2>
+        <p class="atlas-card-body" id="atlas-rules"></p>
+      </div>
+
+      <div class="atlas-card" id="card-factions">
+        <div class="atlas-card-icon">⚔</div>
+        <h2 class="atlas-card-title">Factions</h2>
+        <p class="atlas-card-body" id="atlas-factions"></p>
+      </div>
+
+      <div class="atlas-card atlas-card-full" id="card-mysteries">
+        <div class="atlas-card-icon">🌑</div>
+        <h2 class="atlas-card-title">Mysteries</h2>
+        <p class="atlas-card-body" id="atlas-mysteries"></p>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="atlas-actions">
+      <a href="explorer.html" class="btn-primary">Enter the World →</a>
+      <a href="index.html" class="btn-ghost">Forge a New World</a>
+    </div>
+
+  </main>
+
+  <div class="atlas-error hidden" id="atlas-error">
+    <p class="atlas-error-title">No world found.</p>
+    <p class="atlas-error-sub">You need to create a world before visiting the Atlas.</p>
+    <a href="index.html" class="btn-primary">Go to World Forge →</a>
+  </div>
+
+  <script>
+    async function init() {
+      try {
+        const meRes = await fetch('/api/me', { cache: 'no-store' });
+        if (!meRes.ok) { window.location.replace('/login.html'); return; }
+        const me = await meRes.json();
+        document.getElementById('nav-username').textContent = me.username || me.userId || '';
+      } catch {
+        window.location.replace('/login.html');
+        return;
+      }
+
+      try {
+        const worldRes = await fetch('/api/world');
+
+        if (!worldRes.ok) {
+          document.getElementById('atlas-loading').classList.add('hidden');
+          document.getElementById('atlas-error').classList.remove('hidden');
+          return;
+        }
+
+        const { world } = await worldRes.json();
+        renderWorld(world);
+      } catch {
+        document.getElementById('atlas-loading').classList.add('hidden');
+        document.getElementById('atlas-error').classList.remove('hidden');
+      }
+    }
+
+    function formatValue(value) {
+      if (Array.isArray(value)) return value.join('\n');
+      return value || '—';
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = formatValue(value);
+    }
+
+    function renderWorld(world) {
+      document.title = `UNIVERSA — ${world.name || 'Atlas'}`;
+
+      setText('atlas-world-name', world.name);
+      setText('atlas-premise', world.premise);
+      setText('atlas-atmosphere', world.tone);
+      setText('atlas-geography', world.geography);
+      setText('atlas-history', world.history);
+      setText('atlas-cultures', world.culture);
+      setText('atlas-rules', world.magic_or_rules);
+      setText('atlas-factions', world.factions);
+      setText('atlas-mysteries', world.mysteries);
+
+      document.querySelectorAll('.atlas-card').forEach((card, i) => {
+        card.style.animationDelay = `${i * 0.08}s`;
+      });
+
+      document.getElementById('atlas-loading').classList.add('hidden');
+      document.getElementById('atlas-content').classList.remove('hidden');
+    }
+
+    init();
+
+    window.addEventListener('pageshow', async event => {
+      if (!event.persisted) return;
+
+      try {
+        const meRes = await fetch('/api/me', { cache: 'no-store' });
+        if (!meRes.ok) window.location.replace('/login.html');
+      } catch {
+        window.location.replace('/login.html');
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>

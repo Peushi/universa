@@ -38,6 +38,13 @@
   </div>
 
   <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('needWorld') === '1') {
+      const msg = document.getElementById('message');
+      msg.textContent = 'Create a world first, then you can enter the Explorer.';
+      msg.style.color = '#a78bda';
+    }
+
     function setPremise(el) {
       document.getElementById('premise').value = el.textContent;
     }
