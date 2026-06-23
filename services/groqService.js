@@ -9,6 +9,22 @@ const ALLOWED_MODELS = [
 
 const DEFAULT_MODEL = "llama-3.1-8b-instant"
 
+const WORLD_SYSTEM_PROMPT = `You are Universa, an AI world-building companion. 
+Given a one-sentence premise, generate a rich world bible as JSON.
+Respond ONLY with valid JSON, no markdown, no extra text.
+Format:
+{
+  "name": "world name",
+  "premise": "the original premise",
+  "geography": "2-3 sentences about the world's landscape and regions",
+  "history": "2-3 sentences about how this world came to be",
+  "culture": "2-3 sentences about societies, customs, beliefs",
+  "magic_or_rules": "2-3 sentences about unique laws, magic systems, or physics",
+  "factions": ["faction 1 name: brief description", "faction 2 name: brief description"],
+  "mysteries": ["one unsolved mystery of this world", "another mystery"],
+  "tone": "the overall feel/tone of this world in a few words"
+}`;
+
 export async function chat({ message, history, world }) {
   //build prompt
   const systemPrompt = buildSystemPrompt(world)
