@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNIVERSA — Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="explorer-page">
+
+  <div class="stars-bg"></div>
+
+  <!-- navigation -->
+  <nav class="topnav">
+    <a href="index.html" class="nav-logo">✦ UNIVERSA</a>
+    <div class="nav-links">
+      <span class="nav-user" id="nav-username"></span>
+      <a href="atlas.html" class="nav-link">Atlas</a>
+      <a href="index.html" class="nav-link">New World</a>
+      <button class="nav-btn-logout" id="logout-btn">Leave</button>
+    </div>
+  </nav>
+
+  <div class="explorer-layout">
+
+    <!-- sidebar -->
+    <aside class="explorer-sidebar">
+      <div class="sidebar-section">
+        <p class="sidebar-eyebrow">Current World</p>
+        <h2 class="world-name-display" id="world-name">—</h2>
+        <p class="world-premise-display" id="world-premise"></p>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-eyebrow">Quick Questions</p>
+        <div class="quick-questions">
+          <button class="quick-q" data-q="Who holds the most power in this world right now?">Who holds power?</button>
+          <button class="quick-q" data-q="What is the most dangerous place in this world and why?">Most dangerous place?</button>
+          <button class="quick-q" data-q="What mystery haunts the people of this world?">What mystery haunts you?</button>
+          <button class="quick-q" data-q="Tell me something a traveller arriving here for the first time would notice.">First impressions?</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <a href="atlas.html" class="btn-ghost btn-full">View Full Atlas →</a>
+      </div>
+    </aside>
+
+    <main class="explorer-main">
+
+      <div class="chat-header">
+        <div class="guide-avatar">🌌</div>
+        <div class="chat-header-info">
+          <p class="chat-guide-name">Universa Guide</p>
+          <p class="chat-guide-status" id="guide-status">Ready to speak</p>
+        </div>
+        <button class="btn-ghost btn-clear" id="clear-btn" title="Clear conversation">Clear</button>
+      </div>
+
+      <!-- message feed -->
+      <div class="chat-feed" id="chat-feed">
+      </div>
+
+
+      <div class="typing-indicator hidden" id="typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="chat-input-area">
+        <textarea
+          class="chat-input"
+          id="chat-input"
+          rows="1"
+          maxlength="2000"
+          placeholder="Ask the guide anything about this world…"
+        ></textarea>
+        <button class="btn-send" id="send-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <div class="input-meta">
+        <span class="char-remain" id="char-remain">2000 characters remaining</span>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    let chatHistory = [];  
+    let isWaiting = false;
+
+    //  auth check & init 
+    async function init() {
+      // Check session
+      try {
+        const meRes = await fetch('/api/me');
+        if (!meRes.ok) { window.location.href = '/login.html'; return; }
+        const me = await meRes.json();
+        document.getElementById('nav-username').textContent = me.username;
+      } catch {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const worldRes = await fetch('/api/world');
+        if (!worldRes.ok) {
+          window.location.href = '/index.html';
+          return;
+        }
+        const { world } = await worldRes.json();
+        document.getElementById('world-name').textContent = world.name || 'Unnamed World';
+        document.getElementById('world-premise').textContent = world.premise || '';
+        document.title = `UNIVERSA — ${world.name || 'Explorer'}`;
+
+        const welcomeName = sessionStorage.getItem('worldName') || world.name || 'this world';
+        sessionStorage.removeItem('worldName');
+        addMessage('guide', `Welcome, traveller. I am the voice of ${welcomeName}. Ask me anything — I have lived here all my life.`);
+      } catch {
+        addMessage('guide', 'Welcome, traveller. Ask me anything about this world.');
+      }
+    }
+
+    init();
+
+    //message rendering
+    function addMessage(role, text) {
+      const feed = document.getElementById('chat-feed');
+
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('msg', `msg-${role}`);
+
+      const bubble = document.createElement('div');
+      bubble.classList.add('msg-bubble');
+      bubble.textContent = text;
+
+      wrapper.appendChild(bubble);
+      feed.appendChild(wrapper);
+
+
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function addErrorMessage(text) {
+      const feed = document.getElementById('chat-feed');
+      const el = document.createElement('div');
+      el.classList.add('msg-error');
+      el.textContent = text;
+      feed.appendChild(el);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    async function sendMessage() {
+      if (isWaiting) return;
+
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      isWaiting = true;
+      input.value = '';
+      updateCharCount('');
+
+      addMessage('user', message);
+
+      chatHistory.push({ role: 'user', content: message });
+
+      const typing = document.getElementById('typing-indicator');
+      typing.classList.remove('hidden');
+      document.getElementById('guide-status').textContent = 'Speaking…';
+      document.getElementById('send-btn').disabled = true;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message,
+            history: chatHistory.slice(-20) 
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          addErrorMessage(data.error || 'The guide did not respond. Try again.');
+          chatHistory.pop(); 
+        } else {
+          addMessage('guide', data.reply);
+          chatHistory.push({ role: 'assistant', content: data.reply });
+        }
+      } catch {
+        addErrorMessage('Connection lost. Check the server.');
+        chatHistory.pop();
+      } finally {
+        typing.classList.add('hidden');
+        document.getElementById('guide-status').textContent = 'Ready to speak';
+        document.getElementById('send-btn').disabled = false;
+        isWaiting = false;
+        input.focus();
+      }
+    }
+
+    const chatInput = document.getElementById('chat-input');
+
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    chatInput.addEventListener('input', () => {
+      updateCharCount(chatInput.value);
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+    });
+
+    function updateCharCount(value) {
+      const remaining = 2000 - value.length;
+      const el = document.getElementById('char-remain');
+      el.textContent = `${remaining} characters remaining`;
+      el.classList.toggle('char-warn', remaining < 200);
+    }
+
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+    document.querySelectorAll('.quick-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        chatInput.value = btn.dataset.q;
+        updateCharCount(chatInput.value);
+        chatInput.focus();
+      });
+    });
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      if (chatHistory.length === 0) return;
+      chatHistory = [];
+      const feed = document.getElementById('chat-feed');
+      feed.innerHTML = '';
+      addMessage('guide', 'The conversation has been cleared. Ask me anything, traveller.');
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>
