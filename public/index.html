@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Universa — Create Your World</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <nav>
+    <a href="/index.html" class="nav-logo">✦ Universa</a>
+    <ul class="nav-links">
+      <li><a href="/index.html" class="active">Create</a></li>
+      <li><a href="/explorer.html">Explore</a></li>
+      <li><a href="/atlas.html">Atlas</a></li>
+    </ul>
+  </nav>
+
+  <div class="page">
+    <div class="hero">
+      <h1>Build a Universe<br/>From One Sentence</h1>
+      <p class="hero-sub">Describe your world in a single sentence and Universa will bring it to life.</p>
+    </div>
+
+    <div class="create-form">
+      <textarea id="premise" placeholder="A world where music controls gravity..."></textarea>
+
+      <div class="examples">
+        <span class="pill" onclick="setPremise(this)">A world where memories are tradeable</span>
+        <span class="pill" onclick="setPremise(this)">An empire built inside a sleeping giant</span>
+        <span class="pill" onclick="setPremise(this)">A city that exists only at night</span>
+      </div>
+
+      <button class="btn-submit" onclick="createWorld()">Forge My World ✦</button>
+      <p id="message"></p>
+    </div>
+  </div>
+
+  <script>
+    function setPremise(el) {
+      document.getElementById('premise').value = el.textContent;
+    }
+
+    async function createWorld() {
+      const premise = document.getElementById('premise').value.trim();
+      const msg = document.getElementById('message');
+
+      if (!premise) {
+        msg.textContent = 'Please enter a premise.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      msg.textContent = 'Forging your world...';
+      msg.style.color = '#a78bda';
+
+      const res = await fetch('/api/world', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ premise })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        window.location.href = '/explorer.html';
+      } else if (res.status === 401) {
+        window.location.href = '/login.html';
+      } else {
+        msg.textContent = data.error || 'Something went wrong.';
+        msg.style.color = 'red';
+      }
+    }
+  </script>
+
+</body>
+</html>
