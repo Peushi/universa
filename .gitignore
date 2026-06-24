@@ -3,3 +3,8 @@ node_modules/
 *.log
 .venv
 universa.db
+db.js
+
+
+
+
