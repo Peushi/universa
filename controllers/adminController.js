@@ -1,8 +1,8 @@
 import { getAllUsers, getAllWorlds } from "../services/adminService.js";
 
-export function getUsers(req, res) {
+export async function getUsers(req, res) {
     try {
-        const allUsers = getAllUsers();
+        const allUsers = await getAllUsers();
         res.json({ count: allUsers.length, users: allUsers });
     } catch (err) {
         console.error('getUsers error: ', err);
@@ -10,9 +10,9 @@ export function getUsers(req, res) {
     }
 }
 
-export function getWorlds(req, res) {
+export async function getWorlds(req, res) {
   try {
-    const allWorlds = getAllWorlds()
+    const allWorlds = await getAllWorlds()
     res.json({ count: allWorlds.length, worlds: allWorlds })
   } catch (err) {
     console.error("getWorlds error: ", err)
