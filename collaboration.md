@@ -28,6 +28,9 @@ This log tracks individual contributions, decisions, trade-offs, and issues foun
 | Peushi | style.css | Built shared CSS with cosmic orange/pink/purple gradient theme, starfield background, glowing buttons, and Cinzel font for headings. | Chose warm cosmic palette to match the world-building theme. Used CSS variables and backdrop-filter for a premium feel. | 23/06/2026 |
 | Peushi | SQLite migration | Migrated from better-sqlite3 to sqlite + sqlite3 due to Windows build tools requirement. Updated authController.js and worldController.js to use async getDb(). Added bcrypt password hashing and UUID generation for user IDs. | better-sqlite3 requires Visual Studio C++ build tools which are broken on Node 20 Windows. sqlite3 has prebuilt binaries so no compilation needed. | 24/06/2026 |
 | Peushi | Logout endpoint | Added POST /api/auth/logout using session.destroy(). | Needed because explorer.html calls /api/logout and without it the server returned 404. | 24/06/2026 |
+| Peushi | A-innovation documentation | Completed the innovation document covering market research on World Anvil, Campfire Pro, ChatGPT, and AI Dungeon. Found two academic papers supporting the innovation claim and conducted a patent search on Google Patents. | Classified Universa as Niche based on research — no single product combines AI-generated structured lore, persistent world state, and an immersive in-world guide. | 25/06/2026 |
+| Peushi | C-data-privacy documentation | Completed the data privacy document covering GDPR obligations, risk analysis, bcrypt implementation, session security flags, API key protection, and Mistral as a GDPR-compliant alternative to Groq. | Highlighted the one-world-per-user design as a privacy benefit since it limits data accumulation. Identified Standard Contractual Clauses as the legal mechanism required for Groq's US data transfers under GDPR Article 46. | 26/06/2026 |
+
 
 ## Dead Ends and Trade-Offs
 
