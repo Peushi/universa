@@ -2,6 +2,8 @@ import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import path from "path";
 import { fileURLToPath } from "url";
+import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +35,22 @@ export async function getDb() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `);
+
+  const adminExists = await db.get(
+    "SELECT id FROM users WHERE username = ?",
+    ["admin"]
+  );
+
+  if (!adminExists) {
+    const passwordHash = await bcrypt.hash("admin123", 10);
+
+    await db.run(
+      "INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)",
+      [uuidv4(), "admin", passwordHash, "admin"]
+    );
+
+    console.log("Admin seeded: admin / admin123");
+  }
 
   return db;
 }
